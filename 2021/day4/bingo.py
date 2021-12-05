@@ -34,9 +34,3 @@ for d in draws:
         sum_unmatched = sum(winning_board[0][u[0],u[1]] for u in unmatched)
         print(int(sum_unmatched * d))
         break
-
-
-
-# print(''.join(boards))
-
-# print(np.loadtxt(StringIO('\n'.join(boards))))
