@@ -1,3 +1,13 @@
 # javascript!
 
-running in docker just because.  didnt want to be bothered with IO so inlined args
+running in docker just because.
+
+## part 1
+```
+run.sh 80
+```
+
+## part 2
+```
+run.sh 256
+```
