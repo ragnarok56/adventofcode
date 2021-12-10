@@ -53,6 +53,9 @@ fn main() {
             };
 
             let sum_outputs = || {
+                // this builds a hashmap of the count of each character across all of the digits
+                // knowing how many characters occur is step 1 in determining the types of "signals"
+                // that represent a digit
                 let digit_count_map = digits
                     .iter()
                     .flat_map(|x| x.split("").map(str::to_owned).collect::<Vec<_>>())
@@ -61,6 +64,9 @@ fn main() {
                         acc
                     });
 
+                // this builds yet another hashmap that utilizes the character counts (from above)
+                // to generate a lookup based on the frequency of each character to generate a
+                // unique value that identify a digit
                 let digit_identifier_map = digits
                     .iter()
                     .fold(HashMap::new(), |mut acc, x| {
@@ -70,10 +76,14 @@ fn main() {
                         acc
                     });
 
+                // loop through all the output "signals" and lookup the associated unique value (sum),
+                // then convert to string, concat together and then convert to "int" (wtf is usize)
                 return outputs
                     .iter()
                     .map(|x| {
                         let sorted_digits = sort_string(x.to_string());
+                        // this match is the result of painstaking "looking at examples and matching up sums of digits"
+                        // done manually.  while drinking.
                         return match digit_identifier_map.get(&sorted_digits).unwrap() {
                             17 => 1,
                             25 => 7,
@@ -88,7 +98,7 @@ fn main() {
                             _ => -1
                         };
                     })
-                    .filter(|x| x != &-1)
+                    .filter(|x| x != &-1)  // because why not
                     .map(|x| x.to_string())
                     .collect::<Vec<String>>()
                     .join("")
@@ -101,6 +111,7 @@ fn main() {
             }
         });
 
+        // fortunately, both part1 and part2 involve summing each set of inputs, so ez
         println!("{:?}", result.sum::<usize>());
     }
 }
