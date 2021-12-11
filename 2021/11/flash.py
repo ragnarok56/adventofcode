@@ -3,7 +3,7 @@ import numpy as np
 import sys
 
 # positive int only does that many steps, -1 to continue till all octopi flash
-steps = int(sys.argv[1])
+steps = int(sys.argv[1]) if len(sys.argv) > 1 else -1
 # display matrix on screen to "watch it"
 animate = (sys.argv[2] if len(sys.argv) > 2 else '').lower() == 'true'
 
