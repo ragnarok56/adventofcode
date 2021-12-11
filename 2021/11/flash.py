@@ -7,7 +7,7 @@ steps = int(sys.argv[1])
 # display matrix on screen to "watch it"
 animate = (sys.argv[2] if len(sys.argv) > 2 else '').lower() == 'true'
 
-with open('in') as f:
+with open('in_test') as f:
     input = [" ".join(list(l)) for l in f.readlines()]
     board = np.genfromtxt(input)
 
@@ -61,7 +61,9 @@ while should_continue():
         import time
         time.sleep(.1)
         os.system('clear')
-        print(board)
+        # output board so its easier to see flashes
+        flash_board = np.where(board == 0, board, ' ')
+        print(np.where(flash_board == ' ', flash_board, '0'))
 
     s = s + 1
 
