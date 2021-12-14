@@ -5,8 +5,9 @@ description = ""
 authors = ["ragnarok56 <kevin.nacios@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.8,<3.11"
 numpy = "^1.21.4"
+networkx = "^2.6.3"
 
 [tool.poetry.dev-dependencies]
 
