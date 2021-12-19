@@ -2,6 +2,7 @@ import anytree
 from anytree import Node, RenderTree
 import math
 import ast
+import json
 from itertools import combinations
 
 def gen_tree(pairs, parent=None):
@@ -99,7 +100,7 @@ def part1():
     root = None
 
     for l in lines:
-        l = ast.literal_eval(l.strip())
+        l = json.loads(l)
 
         line_root = Node('')
         gen_tree(l, line_root)
@@ -118,7 +119,7 @@ def part1():
 def part2():
     # this is sloooow
     largest_magnitude = 0
-    eval_lines = [ast.literal_eval(l.strip()) for l in lines]
+    eval_lines = [json.loads(l) for l in lines]
     for [l1, l2] in combinations(eval_lines, 2):
         root1 = Node('')
         gen_tree(l1, root1)
