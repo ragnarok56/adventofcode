@@ -22,15 +22,14 @@ fn main() {
     let input = fs::read_to_string(filename).unwrap();
 
     let mut elves = Vec::<Elf>::new();
+    let elf = Elf {
+        food: Vec::<i32>::new()
+    };
+    elves.push(elf);
     let mut cur_elf = 0;
     // yup, parsing strings is like, super hard
-    for (index, line) in input.lines().enumerate() {
-        if index == 0 {
-            let elf = Elf {
-                food: Vec::<i32>::new()
-            };
-            elves.push(elf)
-        } else if line.chars().count() == 0 {
+    for line in input.lines() {
+        if line.chars().count() == 0 {
             let elf = Elf {
                 food: Vec::<i32>::new()
             };
