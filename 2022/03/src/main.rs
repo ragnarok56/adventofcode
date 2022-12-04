@@ -54,6 +54,9 @@ fn part2() -> u32{
                 .map(|s| s.chars_to_hashset())
                 .collect::<Vec<HashSet<char>>>();
 
+            // fun way to intersect multiple sets
+            // skip first set and use as fold initial value
+            // then intersect across remaining sets
             sacks
                 .iter()
                 .skip(1)
