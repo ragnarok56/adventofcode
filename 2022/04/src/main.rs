@@ -1,21 +1,40 @@
 use std::{fs};
 
-fn part1() -> u32 {
+struct CampRange {
+    begin: i32,
+    end: i32
+}
+
+fn check_overlap(a: CampRange, b: CampRange) -> bool {
+    a.begin <= b.end && a.end >= b.begin
+}
+
+fn check_encompass(a: CampRange, b: CampRange) -> bool {
+    (a.begin >= b.begin && a.end <= b.end) || (b.begin >= a.begin && b.end <= a.end)
+}
+
+fn part(check: fn(CampRange, CampRange) -> bool) -> u32 {
     let lines: Vec<String> = fs::read_to_string("in")
         .unwrap()
         .lines()
         .map(|x| x.to_string())
         .collect();
 
-    lines.iter().map(|line| {
+    lines
+        .iter()
+        .map(|line| {
             let mut sections = line.split(',');
             let mut a = sections.next().unwrap().split('-');
             let mut b = sections.next().unwrap().split('-');
-            let a1: i32 = a.next().unwrap().parse().unwrap();
-            let a2: i32 = a.next().unwrap().parse().unwrap();
-            let b1: i32 = b.next().unwrap().parse().unwrap();
-            let b2: i32 = b.next().unwrap().parse().unwrap();
-            match (a1 >= b1 && a2 <= b2) || (b1 >= a1 && b2 <= a2) {
+            let camp_a = CampRange {
+                begin: a.next().unwrap().parse().unwrap(),
+                end: a.next().unwrap().parse().unwrap()
+            };
+            let camp_b = CampRange {
+                begin: b.next().unwrap().parse().unwrap(),
+                end: b.next().unwrap().parse().unwrap()
+            };
+            match check(camp_a, camp_b) {
                 true => 1,
                 false => 0
             }
@@ -23,8 +42,9 @@ fn part1() -> u32 {
         .sum()
 }
 
-
 fn main() {
-    let result = part1();
+    let result = part(check_encompass);
+    println!("{:?}", result);
+    let result = part(check_overlap);
     println!("{:?}", result);
 }
