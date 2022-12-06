@@ -1,7 +1,7 @@
 use std::fs::File;
-use std::io::{self, BufReader, BufRead};
+use std::io::{BufReader, BufRead};
 
-#[derive(Debug)]
+#[derive(Copy, Clone, Debug)]
 struct Crate {
     content: char
 }
@@ -11,17 +11,7 @@ struct Stack {
     crates: Vec<Crate>
 }
 
-fn part1() {
-    /*
-                        [Z] [W] [Z]
-        [D] [M]         [L] [P] [G]
-    [S] [N] [R]         [S] [F] [N]
-    [N] [J] [W]     [J] [F] [D] [F]
-[N] [H] [G] [J]     [H] [Q] [H] [P]
-[V] [J] [T] [F] [H] [Z] [R] [L] [M]
-[C] [M] [C] [D] [F] [T] [P] [S] [S]
-[S] [Z] [M] [T] [P] [C] [D] [C] [D]
- 1   2   3   4   5   6   7   8   9  */
+fn parse_input() -> (Vec<Stack>, Vec<String>) {
     let file = File::open("in").expect("file doesnt exist");
 
     let reader = BufReader::new(file);
@@ -35,7 +25,7 @@ fn part1() {
         .collect();
 
     crate_input_lines.reverse();
-    println!("{:?}", crate_input_lines);
+
     let num_stacks = crate_input_lines
         .get(0)
         .unwrap()
@@ -68,17 +58,24 @@ fn part1() {
                 })
         });
 
-    // println!("{:?}, {:?}", stacks, stacks.len());
-
-    lines
+    let moves: Vec<String> = lines
         .map(|x| x.unwrap())
+        .collect();
+
+    return (stacks,moves)
+
+}
+
+fn part1() {
+    let (mut stacks, moves) = parse_input();
+    moves
+        .iter()
         .for_each(|x| {
-            println!("{:?}", x);
             let mut moves = x.split(" ");
             let num_crates_to_move: usize = moves.nth(1).unwrap().parse().unwrap();
             let stack_from_index: usize = moves.nth(1).unwrap().parse().unwrap();
             let stack_to_index: usize = moves.nth(1).unwrap().parse().unwrap();
-            println!("{:?}-{:?}-{:?}", num_crates_to_move, stack_from_index, stack_to_index);
+
             {0..num_crates_to_move}.for_each(|_| {
                 let crate_to_move = stacks
                     .get_mut(stack_from_index - 1)
@@ -93,7 +90,43 @@ fn part1() {
 
     stacks.iter_mut().for_each(|x| {
         print!("{}", x.crates.pop().unwrap().content);
-    })
+    });
+    println!()
+
+}
+
+
+fn part2() {
+    let (mut stacks, moves) = parse_input();
+    moves
+        .iter()
+        .for_each(|x| {
+            let mut moves = x.split(" ");
+            let num_crates_to_move: usize = moves.nth(1).unwrap().parse().unwrap();
+            let stack_from_index: usize = moves.nth(1).unwrap().parse().unwrap();
+            let stack_to_index: usize = moves.nth(1).unwrap().parse().unwrap();
+
+            let mut crates_to_move: Vec<Crate> = {0..num_crates_to_move}
+                .map(|_| {
+                    stacks
+                        .get_mut(stack_from_index - 1)
+                        .unwrap()
+                        .crates.pop().unwrap()
+                })
+                .collect();
+            crates_to_move.reverse();
+            crates_to_move.iter().for_each(|c| {
+                stacks
+                    .get_mut(stack_to_index - 1)
+                    .unwrap()
+                    .crates.push(*c);
+            })
+        });
+
+    stacks.iter_mut().for_each(|x| {
+        print!("{}", x.crates.pop().unwrap().content);
+    });
+    println!()
 
 }
 
