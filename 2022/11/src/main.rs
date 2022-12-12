@@ -1,21 +1,21 @@
-use std::fs::File;
+// use std::fs::File;
 use std::collections::HashMap;
-use std::io::{BufReader, BufRead};
+// use std::io::{BufReader, BufRead};
 
 
 #[derive(Debug)]
 struct Monkey {
     items: Vec<i64>,
     op: fn(i64) -> i64,
-    test: fn(i64) -> (i64, i64),
-    // true_path: i64,
-    false_path: i64
+    test: fn(i64) -> i64,
+    divisible: i64
 }
 
-fn main() {
-    let file = File::open("in").expect("file doesnt exist");
+fn parts(is_part_1: bool) {
+    
+    // let file = File::open("in").expect("file doesnt exist");
 
-    let reader = BufReader::new(file);
+    // let reader = BufReader::new(file);
 
     // let monkeys: Vec<Monkey> = reader.lines()
     //     .map(|x| x.unwrap())
@@ -67,87 +67,77 @@ fn main() {
     monkeys.push(Monkey { 
         items: vec![50, 70, 89, 75, 66, 66],
         op: |x| x * 5,
-        test: |x| if (x % 2 == 0) { (2, 2) } else { (x, 1) },
-        false_path: 1
+        test: |x| if x % 2 == 0 { 2 } else { 1 },
+        divisible: 2
     });
     monkeys.push(Monkey { 
         items: vec![85],
         op: |x| x * x,
-        test: |x| if (x % 7 == 0) { (7, 3) } else { (x, 6) },
-        false_path: 6
+        test: |x| if x % 7 == 0 { 3 } else { 6 },
+        divisible: 7
     });
     monkeys.push(Monkey { 
         items: vec![66, 51, 71, 76, 58, 55, 58, 60],
         op: |x| x + 1,
-        test: |x| if (x % 13 == 0) { (13, 1) } else { (x, 3) },
-        false_path: 3
+        test: |x| if x % 13 == 0 { 1 } else { 3 },
+        divisible: 13
     });
     monkeys.push(Monkey { 
         items: vec![79, 52, 55, 51],
         op: |x| x + 6,
-        test: |x| if (x % 3 == 0) { (3, 6) } else { (x, 4) },
-        false_path: 4
+        test: |x| if x % 3 == 0 { 6 } else { 4 },
+        divisible: 3
     });
     monkeys.push(Monkey { 
         items: vec![69, 92],
         op: |x| x * 17,
-        test: |x| if (x % 19 == 0) { (19, 7) } else { (x, 5) },
-        false_path: 5
+        test: |x| if x % 19 == 0 { 7 } else { 5 },
+        divisible: 19
     });
     monkeys.push(Monkey { 
         items: vec![71, 76, 73, 98, 67, 79, 99],
         op: |x| x + 8,
-        test: |x| if (x % 5 == 0) { (5, 0) } else { (x, 2) },
-        false_path: 2
+        test: |x| if x % 5 == 0 { 0 } else { 2 },
+        divisible: 5
     });
     monkeys.push(Monkey { 
         items: vec![82, 76, 69, 69, 57],
         op: |x| x + 7,
-        test: |x| if (x % 11 == 0) { (11, 7) } else { (x, 4) },
-        false_path: 4
+        test: |x| if x % 11 == 0 { 7 } else { 4 },
+        divisible: 11
     });
     monkeys.push(Monkey { 
         items: vec![65, 79, 86],
         op: |x| x + 5,
-        test: |x| if (x % 17 == 0) { (17, 5) } else { (x, 0) },
-        false_path: 0
+        test: |x| if x % 17 == 0 { 5 } else { 0 },
+        divisible: 17
     });
 
     let mut item_map: HashMap<usize, Vec<i64>> = HashMap::new();
+    let mut inspection_count: HashMap<usize, i64> = HashMap::new();
+    let lcm = monkeys.iter().fold(1, |acc, x| acc * x.divisible);
     for (i, m) in monkeys.iter().enumerate() {
         item_map.insert(i, m.items.iter().map(|x| *x).collect::<Vec<i64>>());
-    }
-
-    let mut inspection_count: HashMap<usize, i64> = HashMap::new();
-    for (i, m) in monkeys.iter().enumerate() {
         inspection_count.insert(i, 0);
     }
 
-    for r in 0..20 {
-        println!("Round {:?}", r);
+    let range = if is_part_1 { 0..20 } else { 0..10000 };
 
+    for _ in range {
         for (mi, m) in monkeys.iter().enumerate() {
-            println!("  Monkey {}: {:?}", mi, item_map.get(&mi).unwrap());
             let mut monkey_destinations: HashMap<usize, Vec<i64>> = HashMap::new();
             {
                 let items = item_map.get_mut(&mi).unwrap();
                 for i in items {
                     let cur_count = inspection_count.get_mut(&mi).unwrap();
                     *cur_count += 1;
-                    let wl = (m.op)(*i) / 3;
-                    // let wl = (m.op)(*i);
-                    let test_result = if wl == -1 { (m.false_path, wl) } else { (m.test)(wl) };
-                    let monkey_index: usize = test_result.1 as usize;
-                    // let mut new_wl = test_result.0;
-                    // if new_wl > 99999999999999999 {
-                    //     new_wl = -1;
-                    // }
+                    let wl = if is_part_1 { (m.op)(*i) / 3 } else { (m.op)(*i) % lcm };
+                    let monkey_index: usize = (m.test)(wl) as usize;
                     if monkey_destinations.contains_key(&monkey_index) {
                         monkey_destinations.get_mut(&monkey_index).unwrap().push(wl);
                     } else {
                         monkey_destinations.insert(monkey_index, vec![wl]);
                     }
-                    
                 }
                 item_map.insert(mi, Vec::new());
             }
@@ -158,11 +148,13 @@ fn main() {
                 }
             }
         }
-        
-        println!("inspections: {:?}", inspection_count);
     }
-    println!("{:?}", inspection_count);
     let mut counts = inspection_count.values().map(|x| *x).collect::<Vec<i64>>();
     counts.sort();
     println!("{:?}", counts.iter().rev().take(2).fold(1, |acc, x| acc * x));
+}
+
+fn main() {
+    parts(true);
+    parts(false);
 }
