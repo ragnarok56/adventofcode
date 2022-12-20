@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-import numpy as np
 
 class Droplet:
     def __init__(self, pos):
@@ -32,11 +31,32 @@ class Droplet:
 with open('in_test') as f:
     droplets = [Droplet([int(x) for x in l.strip().split(',')]) for l in f.readlines()]
 
-    # print(sum(d.surface_area for d in droplets))
-
     for d1 in droplets:
         if d1.surface_area > 0:
             for d2 in droplets:
                 d1.check_surface_area(d2)
 
     print(sum(d.surface_area for d in droplets))
+
+    covered_droplets = [d for d in droplets if d.surface_area < 1]
+
+    print(covered_droplets)
+    print(len(covered_droplets))
+
+    # minx = min([d.x for d in droplets])
+    # maxx = max([d.x for d in droplets])
+    # miny = min([d.y for d in droplets])
+    # maxy = max([d.y for d in droplets])
+    # minz = min([d.z for d in droplets])
+    # maxz = max([d.z for d in droplets])
+
+    # droplet_set = set([f'{d.x},{d.y},{d.z}' for d in droplets])
+
+    # print(minx, maxx, miny, maxy, minz, maxz)
+
+    # for x in range(minx, maxx):
+    #     for y in range(miny, maxy):
+    #         for z in range(minz, maxz):
+    #             if f'{x},{y},{z}' not in droplet_set:
+    #                 print(x, y, z)
+
