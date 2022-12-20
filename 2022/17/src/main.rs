@@ -129,7 +129,7 @@ fn part1(num: u32, lookback: u32) {
         if piece_height > 3 {
             piece_bottom_row = piece_height - 3 + piece_bottom_row;
         }
-    
+
         let mut piece_tl: (i32, i32) = (starting_height, 2);
 
         // println!("New Piece! max height: {}, piece height: {}, starting_height: {}, piece_bottom_row: {}", max_height, piece_height, starting_height, piece_bottom_row);
@@ -151,7 +151,7 @@ fn part1(num: u32, lookback: u32) {
                             can_move = false;
                         // } else if piece_tl_pot.0 < piece_bottom_row && *tower.get((piece_tl_pot.0 as usize) - r).unwrap().get(c + (piece_tl_pot.1 as usize)).unwrap() != 0 {
                         } else if piece_tl_pot.0 < piece_bottom_row {
-                            let tower_row = tower.get((piece_tl_pot.0 as usize) - r);                                
+                            let tower_row = tower.get((piece_tl_pot.0 as usize) - r);
                             if tower_row.is_some() {
                                 let tower_col = tower_row.unwrap().get(((c as i32) + piece_tl_pot.1) as usize);
                                 if tower_col.is_some() {
@@ -184,7 +184,7 @@ fn part1(num: u32, lookback: u32) {
                     if *y != 0 {
                         // println!("Checking D ({},{}) -> [{},{}]", r, c, piece_tl_pot.0 - (r as i32), c + (piece_tl_pot.1 as usize));
                         if piece_tl_pot.0 < piece_bottom_row {
-                            let tower_row = tower.get((piece_tl_pot.0 as usize) - r);                                
+                            let tower_row = tower.get((piece_tl_pot.0 as usize) - r);
                             if tower_row.is_some() {
                                 let tower_col = tower_row.unwrap().get(c + (piece_tl_pot.1 as usize));
                                 if tower_col.is_some() {
@@ -268,6 +268,7 @@ fn part1(num: u32, lookback: u32) {
     // }
     let mut cycle_rocks: i64 = 0;
     let mut cycle_height_diff: i64 = 0;
+    let amount = 1000000000000i64;
     for x in cycle_map.iter() {
         if x.1.len() > 1 {
             println!("{:?}: {:?}", x.0, x.1);
@@ -278,23 +279,23 @@ fn part1(num: u32, lookback: u32) {
             cycle_height_diff = (second.0 - first.0) as i64;
             println!("blocks before loop: {:?}", blocks_landed_before_loop);
             println!("height_before_loop: {:?}", height_before_loop);
-            let cycles = (1000000000000i64 - blocks_landed_before_loop as i64) as i64 / cycle_rocks;
+            let cycles = (amount - blocks_landed_before_loop as i64) as i64 / cycle_rocks;
             println!("cycles: {:?}", cycles);
-            println!("remaining: {:?}", 1000000000000i64 - (cycles * cycle_rocks + blocks_landed_before_loop as i64));
+            println!("remaining: {:?}", amount - (cycles * cycle_rocks + blocks_landed_before_loop as i64));
             println!("rocks: {:?}, height diff: {:?}", cycle_rocks, cycle_height_diff);
             // println!("heights: {:?}", &heights[cycle_rocks as usize..(cycle_rocks as usize)*2 + 1]);
             break
         }
     }
     println!("max height: {}", max_height);
-    println!("rocks: {}", 1000000000000 / cycle_rocks);
-    println!("max height for elephants to be impressed: {}", (1000000000000 / cycle_rocks * cycle_height_diff));
+    println!("rocks: {}", amount / cycle_rocks);
+    println!("max height for elephants to be impressed: {}", (amount / cycle_rocks * cycle_height_diff));
     // 1560932944583
     // 1560932944615  <-- answer
     // 32 off, wtf
-    
+
 }
 
 fn main() {
-    part1(2022, 50);
+    part1(2022, 10);
 }
