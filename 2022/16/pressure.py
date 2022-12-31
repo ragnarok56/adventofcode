@@ -9,7 +9,7 @@ G = nx.DiGraph()
 rate_map = {}
 
 
-with open('in') as f:
+with open('in_example') as f:
 # with open('in') as f:
     for l in f.readlines():
         match = re.search("Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.*)", l)
@@ -31,7 +31,6 @@ with open('in') as f:
 dfs = nx.dfs_edges(G, 'AA')
 
 by_rate = sorted([(n, G.nodes[n]) for n in G.nodes()], key=lambda x: x[1]['rate'], reverse=True)
-# print(by_rate)
 
 distances = {}
 for n in G.nodes():
@@ -47,32 +46,41 @@ paths = []
 # otherwise i need to loop through 15! things and thats just not gonna happen
 def permutations(prev, elements, min):
     if len(elements) <= 1:
-        yield (elements, 0)
+        yield (elements, 1)
         return
     remaining = elements[1:]
     prev = elements[0:1]
+    # print(f"starting dfs: rem: {remaining}, prev: {prev}")
     for (perm, d) in permutations(prev, remaining, min):
+        # print(f'prev: {prev}, perm: {perm}')
+        cost = d + get_distance(prev[0], perm[0])
+        # print(f'{prev[0]} to {perm[0]} is {get_distance(prev[0], perm[0])}, cur cost: {cost}')
         for i in range(len(elements)):
-            cost = d + get_distance(prev[0], perm[0])
-            # print(f'{prev[0]} to {perm[0]} is {get_distance(prev[0], perm[0])}')
+            if len(perm[i:]) == 0:
+                continue
             if cost > 30:
-                # print('cost > 30', perm[i:])
-                yield (perm[i:], d)
-            else: 
-                # print('cost <= 30')
-                yield (perm[:i] + elements[0:1] + perm[i:], cost)
+                res = (perm[i:], d)
+                # print(f"invalid: {res}")
+                yield res
+            else:
+                res = (perm[:i] + elements[0:1] + perm[i:], cost + 1)
+                # print(f"valid: {res}")
+                yield res
 
-paths = permutations('AA', list(rate_map.keys()), 30)
-# print(next(paths))
-for p in paths:
-    print(p)
+paths = permutations('AA', list(rate_map.keys()) + ['AA'], 0)
+
+path_list = list(paths)
+path_set = set(tuple(p[0][::-1]) for p in path_list)
+print(len(path_set))
+# for p in path_set:
+#     print(p)
+# exit(0)
 # for (n, r) in rate_map.items():
 #     distance = 30
 #     for n2 in rate_map.keys():
-    
-        
 
-exit()
+# print(rate_map)
+
 # print(nx.shortest_path_length(G, 'BB'))
 
 # print(distances)
@@ -108,7 +116,7 @@ class PressureTrack:
         # print(f'valves {[v[0] for v in self.valves]} are open, releasing {sum([v[1] for v in self.valves])} * ({d+1})')
         for v in self.valves:
             self.pressure = self.pressure + (v[1] * (d + 1))
-    
+
     def __str__(self):
         return f'Minute: {self.minutes}, Pressure: {self.pressure}, Valves: {[v[0] for v in self.valves]}'
 
@@ -133,7 +141,7 @@ class DFS:
             pt.next()
 
         next_pt = copy(pt)
-        
+
         rate = self.graph.nodes[n]['rate']
         if rate > 0:
             next_pt.open_valve(n, rate)
@@ -158,17 +166,19 @@ class DFS:
     #         if r is not None:
     #             yield pt_copy
 
-    # this is the other method besides DFS to just 
-    # 
+    # this is the other method besides DFS to just
+    #
     def start(self, start, minutes):
         # DD, BB, JJ, HH, EE,CC
         remaining_valves = [n for n in G.nodes() if G.nodes[n]['rate'] > 0]
-        print(len(remaining_valves))
+        # print(len(remaining_valves))
+        perms = [p[1:] for p in path_set]
         max_pt = None
         c = 0
         # print(len(list(itertools.permutations(remaining_valves))))
-        exit()
-        for perm in itertools.permutations(remaining_valves):
+        for perm in perms:
+            perm = list(perm)
+            print(perm)
         # for perm in [('DD', 'BB', 'JJ', 'HH', 'EE', 'CC')]:
             c = c + 1
             pt = PressureTrack(set(remaining_valves), minutes -1, [])
@@ -207,4 +217,4 @@ d = DFS(G)
 
 res = d.start('AA', 30)
 # print(r, d.steps)
-    
+
