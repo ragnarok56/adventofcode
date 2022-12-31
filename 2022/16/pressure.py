@@ -3,34 +3,24 @@ import re
 import networkx as nx
 from typing import List,Tuple
 from copy import copy
-import itertools
+from collections import deque
 
 G = nx.DiGraph()
 rate_map = {}
 
-
-with open('in_example') as f:
-# with open('in') as f:
+with open('in') as f:
     for l in f.readlines():
         match = re.search("Valve (\w+) has flow rate=(\d+); tunnels? leads? to valves? (.*)", l)
         valve = match.group(1)
         rate = int(match.group(2))
         edges = match.group(3)
         edges = [e.strip() for e in edges.split(',')]
-        # print(valve, rate, edges)\
         if rate > 0:
             rate_map[valve] = rate
         G.add_node(valve, rate=rate)
         for e in edges:
             G.add_node(e)
             G.add_edge(valve, e)
-
-# for n in G.neighbors('AA'):
-#     print(n, G.nodes[n]['rate'])
-
-dfs = nx.dfs_edges(G, 'AA')
-
-by_rate = sorted([(n, G.nodes[n]) for n in G.nodes()], key=lambda x: x[1]['rate'], reverse=True)
 
 distances = {}
 for n in G.nodes():
@@ -39,182 +29,50 @@ for n in G.nodes():
 def get_distance(s, e):
     return distances[s][e]
 
-paths = []
-
-# todo: trying to figure out how to get valid permutations of valve nodes
-# that dont exceed the timer (30 minutes) to travel between
-# otherwise i need to loop through 15! things and thats just not gonna happen
-def permutations(prev, elements, min):
-    if len(elements) <= 1:
-        yield (elements, 1)
-        return
-    remaining = elements[1:]
-    prev = elements[0:1]
-    # print(f"starting dfs: rem: {remaining}, prev: {prev}")
-    for (perm, d) in permutations(prev, remaining, min):
-        # print(f'prev: {prev}, perm: {perm}')
-        cost = d + get_distance(prev[0], perm[0])
-        # print(f'{prev[0]} to {perm[0]} is {get_distance(prev[0], perm[0])}, cur cost: {cost}')
-        for i in range(len(elements)):
-            if len(perm[i:]) == 0:
-                continue
-            if cost > 30:
-                res = (perm[i:], d)
-                # print(f"invalid: {res}")
-                yield res
-            else:
-                res = (perm[:i] + elements[0:1] + perm[i:], cost + 1)
-                # print(f"valid: {res}")
-                yield res
-
-paths = permutations('AA', list(rate_map.keys()) + ['AA'], 0)
-
-path_list = list(paths)
-path_set = set(tuple(p[0][::-1]) for p in path_list)
-print(len(path_set))
-# for p in path_set:
-#     print(p)
-# exit(0)
-# for (n, r) in rate_map.items():
-#     distance = 30
-#     for n2 in rate_map.keys():
-
-# print(rate_map)
-
-# print(nx.shortest_path_length(G, 'BB'))
-
-# print(distances)
-# for n in dfs:
-#     print(n[0], G.nodes[n[0]]['rate'])
-
-# for n in G.nodes():
-#     for r in by_rate:
-#         steps = distances[n][r[0]]
-#         print(f'{n}->{r[0]}: {steps}')
-
-# for r in by_rate:
-#     steps = get_distance('DD', r[0])
-#     print(f'DD->{r[0]}: {steps} - {30 - steps} [{r[1]}]')
-
-class PressureTrack:
-    def __init__(self, remaining_valves: set, minutes: int = 0, valves: List[Tuple[str,int]] = []):
-        self.pressure = 0
+class State:
+    def __init__(self, cur, valves, elapsed, pressure):
+        self.cur = cur
         self.valves = valves
-        self.minutes = minutes
-        self.remaining_valves = remaining_valves
+        self.elapsed = elapsed
+        self.pressure = pressure
+    def __repr__(self):
+        return f'[{self.elapsed}]:[{self.pressure}]'
 
-    def can_move(self):
-        return self.minutes > 0 and len(self.remaining_valves) > 0
+max_pressure = 0
+queue = deque()
+seen = set()
 
-    def open_valve(self, n: str, rate: int):
-        self.valves.append((n, rate))
-        self.remaining_valves.remove(n)
+queue.append(State('AA', tuple(), 0, 0))
 
-    def move(self, d):
-        # print(f'Minute {30 - self.minutes}: moving {d} spots (pressure current {self.pressure})')
-        self.minutes = self.minutes - (d + 1)
-        # print(f'valves {[v[0] for v in self.valves]} are open, releasing {sum([v[1] for v in self.valves])} * ({d+1})')
-        for v in self.valves:
-            self.pressure = self.pressure + (v[1] * (d + 1))
+def calc_pressure(time, valves):
+    pressure_rate = sum([rate_map[v] for v in valves])
+    return pressure_rate * time
 
-    def __str__(self):
-        return f'Minute: {self.minutes}, Pressure: {self.pressure}, Valves: {[v[0] for v in self.valves]}'
+while len(queue) > 0:
+    s: State = queue.pop()
+    remaining_valves = [v for v in rate_map.keys() if v not in s.valves]
 
-    def __copy__(self):
-        pt = PressureTrack(self.remaining_valves.copy(), self.minutes, copy(self.valves))
-        pt.pressure = self.pressure
-        return pt
+    if len(remaining_valves) == 0 or s.elapsed >= 30:
+        updated_pressure = s.pressure + calc_pressure(30 - s.elapsed, s.valves)
+        max_pressure = max(max_pressure, updated_pressure)
+        continue
 
-class DFS:
-    def __init__(self, graph: nx.DiGraph):
-        self.graph = graph
-        self.steps = 0
+    for v in remaining_valves:
+        cost = get_distance(s.cur, v) + 1
+        updated_elapsed = s.elapsed + cost
+        if s.elapsed + cost >= 30:
+            updated_pressure = s.pressure + calc_pressure(30 - s.elapsed, s.valves)
+            max_pressure = max(max_pressure, updated_pressure)
+            continue
 
-    def walk(self, n: str, d: int, minute: int, pt: PressureTrack):
-        if minute == 0:
-            return None
+        updated_pressure = s.pressure + calc_pressure(cost, s.valves)
+        updated_valves = s.valves + (v,)
 
-        self.steps = self.steps + 1
+        key = (updated_valves, updated_pressure, updated_elapsed)
+        if key not in seen:
+            seen.add(key)
+            queue.append(State(v, updated_valves, updated_elapsed, updated_pressure))
 
-        # paths = [n]
-        for x in range(d):
-            pt.next()
+print(max_pressure)
 
-        next_pt = copy(pt)
-
-        rate = self.graph.nodes[n]['rate']
-        if rate > 0:
-            next_pt.open_valve(n, rate)
-
-        print(next_pt)
-        for next_valve in next_pt.remaining_valves:
-            d = get_distance(n, next_valve)
-            self.walk(next_valve, d, minute - d, next_pt)
-
-    # def walk2(self, n: str, d: int, minute: int, pt: PressureTrack):
-    #     if not pt.can_move():
-    #         return None
-
-    #     print(pt)
-
-    #     for next in pt.remaining_valves:
-    #         d = get_distance(n, next)
-    #         pt_copy = copy(pt)
-    #         pt_copy.move(d)
-    #         pt_copy.open_valve(next, self.graph.nodes[n]['rate'])
-    #         r = self.walk2(next, d, minute - d, pt_copy)
-    #         if r is not None:
-    #             yield pt_copy
-
-    # this is the other method besides DFS to just
-    #
-    def start(self, start, minutes):
-        # DD, BB, JJ, HH, EE,CC
-        remaining_valves = [n for n in G.nodes() if G.nodes[n]['rate'] > 0]
-        # print(len(remaining_valves))
-        perms = [p[1:] for p in path_set]
-        max_pt = None
-        c = 0
-        # print(len(list(itertools.permutations(remaining_valves))))
-        for perm in perms:
-            perm = list(perm)
-            print(perm)
-        # for perm in [('DD', 'BB', 'JJ', 'HH', 'EE', 'CC')]:
-            c = c + 1
-            pt = PressureTrack(set(remaining_valves), minutes -1, [])
-            n = start
-            for next in perm:
-                d = get_distance(n, next)
-                # print(f'moving {n} to {next}')
-                if pt.minutes < 0:
-                    break
-                n = next
-                pt.move(d)
-                pt.open_valve(next, rate_map[n])
-            pt.move(pt.minutes)
-            if max_pt is None or pt.pressure > max_pt.pressure:
-                max_pt = pt
-            print(c)
-        print(f'Max: {max_pt}')
-
-
-
-# steps = 0
-# def walk(n: str, rem: int):
-#     global steps
-#     if rem == 0:
-#         return None
-#     paths = []
-#     for neighbor in G.neighbors(n):
-#         print(f'{neighbor.rjust(rem-1)}')
-#         steps = steps + 1
-#         r = walk(neighbor, rem - 1)
-#         if r is not None:
-#             paths.append(r)
-#     return paths
-
-d = DFS(G)
-
-res = d.start('AA', 30)
-# print(r, d.steps)
 
