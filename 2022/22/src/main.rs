@@ -40,17 +40,6 @@ impl Heading {
             Heading::W => -1
         }
     }
-
-    fn toggle_orientation(&self, other: Heading) -> bool {
-        if *self == other {
-            return false
-        } else if (*self == Heading::N || *self == Heading::S) && (other == Heading::E || other == Heading::W) {
-            return true
-        } else if (*self == Heading::E || *self == Heading::W) && (other == Heading::N || other == Heading::S) {
-            return true
-        }
-        return false
-    }
 }
 
 #[derive(Clone, Debug)]
@@ -87,8 +76,7 @@ fn get_heading_char(heading: &Heading) -> char {
     }
 }
 
-fn display_board(board: &Vec<Vec<Tile>>, player: &Player) {
-    let max = 10;
+fn _display_board(board: &Vec<Vec<Tile>>, player: &Player) {
     for (r, x) in board.iter().enumerate() {
         for (c, t) in x.iter().enumerate() {
             if player.r == r && player.c == c {
@@ -120,71 +108,26 @@ fn get_tile(board: &Vec<Vec<Tile>>, row: usize, col: usize) -> Option<&Tile> {
 }
 
 fn get_new_position(fs: usize, row: usize, col: usize, cur_heading: Heading, next_heading: Heading) -> (usize, usize) {
-    let new_col = row % fs;
-    let new_row = col % fs;
+    let new_col = col % fs;
+    let new_row = row % fs;
 
-    match (cur_heading, next_heading) {
-        // (Heading::W, Heading::W) => (0, (fs - 1) - new_col),
-        // (Heading::W, Heading::E) => ((fs - 1), new_col),
-        // (Heading::W, Heading::N) => (new_row, 0),
-        // (Heading::W, Heading::S) => ((fs - 1) - new_row, (fs - 1)),
-        // (Heading::E, Heading::W) => (0, new_col),
-        // (Heading::E, Heading::E) => ((fs - 1), (fs - 1) - new_col),
-        // (Heading::E, Heading::N) => ((fs - 1) - new_row, 0),
-        // (Heading::E, Heading::S) => (new_row, (fs - 1)),
-        // (Heading::N, Heading::W) => (0, new_col),
-        // (Heading::N, Heading::E) => ((fs - 1), (fs - 1) - new_col),
-        // (Heading::N, Heading::N) => ((fs - 1) - new_row, 0),
-        // (Heading::N, Heading::S) => (new_row, (fs - 1)),
-        // (Heading::S, Heading::W) => (0, (fs - 1) - new_col),
-        // (Heading::S, Heading::E) => ((fs - 1), new_col),
-        // (Heading::S, Heading::N) => (new_row, 0),
-        // (Heading::S, Heading::S) => ((fs - 1) - new_row, (fs - 1))
-        // (Heading::W, Heading::W) => (0, (fs - 1) - new_col),
-        // (Heading::W, Heading::E) => ((fs - 1) - new_row, 0),//
-        // (Heading::W, Heading::N) => (new_row, 0),
-        // (Heading::W, Heading::S) => ((fs - 1) - new_row, (fs - 1)),
-        // (Heading::E, Heading::W) => ((fs - 1) - new_row, (fs - 1)),//
-        // (Heading::E, Heading::E) => ((fs - 1), (fs - 1) - new_col),
-        // (Heading::E, Heading::N) => ((fs - 1) - new_row, 0),
-        // (Heading::E, Heading::S) => (new_row, (fs - 1)),
-        // (Heading::N, Heading::W) => (0, new_col),
-        // (Heading::N, Heading::E) => (new_row, 0),//
-        // (Heading::N, Heading::N) => ((fs - 1) - new_row, 0),
-        // (Heading::N, Heading::S) => (new_row, (fs - 1)),
-        // (Heading::S, Heading::W) => (new_row, (fs - 1) - new_col),
-        // (Heading::S, Heading::E) => ((fs - 1), new_col),
-        // (Heading::S, Heading::N) => (new_row, 0),
-        // (Heading::S, Heading::S) => ((fs - 1) - new_row, (fs - 1)),
-
-        // N-E
+    let (r, c) = match (cur_heading, next_heading) {
         (Heading::N, Heading::E) => (new_col, 0),
-        // W-S
         (Heading::W, Heading::S) => (0, new_row),
-
-        // S-W
         (Heading::S, Heading::W) => (new_col, (fs - 1)),
-        // E-N
         (Heading::E, Heading::N) => ((fs - 1), new_row),
-
-        // E-W
         (Heading::E, Heading::W) => ((fs - 1) - new_row, (fs - 1)),
-        // W-E
         (Heading::W, Heading::E) => ((fs - 1) - new_row, 0),
-
-        // S-S
         (Heading::S, Heading::S) => (0, new_col),
-        // N-N
         (Heading::N, Heading::N) => ((fs - 1), new_col),
-
         _ => panic!("woops")
-
-
-    }
+    };
+    // println!("{:?} to {:?}, [{},{}]({},{}) to ({},{})", cur_heading, next_heading, row, col, new_row, new_col, r, c);
+    (r, c)
 }
 
 fn part1() -> () {
-    let file = File::open("in_test").expect("file doesnt exist");
+    let file = File::open("in").expect("file doesnt exist");
 
     let reader = BufReader::new(file);
     let lines = reader.lines();
@@ -336,14 +279,13 @@ fn part2() -> () {
         })
         .collect();
     let region_pos: HashMap<usize,(usize, usize)> = regions.into_iter().enumerate().collect();
-
     let region_map: HashMap<(usize, &Heading),(usize, Heading)> = HashMap::from_iter([
         ((0, &Heading::N), (5, Heading::E)),
         ((0, &Heading::W), (3, Heading::E)),
         ((1, &Heading::N), (5, Heading::N)),
         ((1, &Heading::E), (4, Heading::W)),
         ((1, &Heading::S), (2, Heading::W)),
-        ((2, &Heading::W), (3, Heading::E)),
+        ((2, &Heading::W), (3, Heading::S)),
         ((2, &Heading::E), (1, Heading::N)),
         ((3, &Heading::N), (2, Heading::E)),
         ((3, &Heading::W), (0, Heading::E)),
@@ -422,188 +364,62 @@ fn part2() -> () {
             let moves = moves.ok().unwrap();
             for _ in 0..moves {
                 let cur_player_heading = player.heading.clone();
+                let move_amount = player.heading.move_amount();
+                let tile_pot: &Tile;
                 if cur_player_heading == Heading::N || cur_player_heading == Heading::S {
-                    let col = transposed_board.get(player.c).unwrap();
-                    let move_amount = player.heading.move_amount();
+                    // let col = transposed_board.get(player.c).unwrap();
                     let dest = (player.r as i32 + move_amount) as usize;
                     let start_end = col_start_end.get(&player.c).unwrap();
 
-                    let wrap_tile;
-                    if move_amount < 0 {
-                        wrap_tile = start_end.1
-                    } else {
-                        wrap_tile = start_end.0
-                    };
-
-                    let tile_pot;
                     if dest < start_end.0.r || dest > start_end.1.r {
                         let cur_tile = get_tile(&transposed_board, player.c, player.r).unwrap();
-                        // println!("current tile: {:?}", cur_tile);
                         let next_region = region_map.get(&(cur_tile.face.unwrap(), &cur_player_heading)).unwrap();
-                        println!("WRAP: heading: {:?}, cur_tile: {:?}, next_region: {:?}", cur_player_heading, cur_tile, next_region);
-                        // let change_orientation = player.heading.toggle_orientation(next_region.1);
                         player.heading = next_region.1;
-                        let (mut new_row, mut new_col) = get_new_position(fs, player.c, player.r, cur_player_heading, next_region.1);
-                        // let mut new_col: usize;
-                        // let mut new_row: usize;
-                        // if change_orientation {
-                        //     new_col = player.r % fs;
-                        //     new_row = player.c % fs;
-                        //     new_row = match player.heading {
-                        //         Heading::S => 0,
-                        //         Heading::N => fs - 1,
-                        //         _ => new_row
-                        //         // _ => match cur_player_heading {
-                        //         //     Heading::N => new_row,
-                        //         //     Heading::S => new_row,
-                        //         //     _ => (fs - 1) - new_row
-                        //         // }
-                        //     };
-                        //     new_col = match player.heading {
-                        //         Heading::E => 0,
-                        //         Heading::W => fs - 1,
-                        //         _ => new_col
-                        //         // _ => match cur_player_heading {
-                        //         //     Heading::N => (fs - 1) + new_col,
-                        //         //     Heading::S => (fs - 1) + new_col,
-                        //         //     _ => (fs - 1) - new_col
-                        //         // }
-                        //     };
-                        // } else {
-                        //     new_col = player.c % fs;
-                        //     new_row = player.r % fs;
-                        //     new_col = match player.heading {
-                        //         Heading::S => (fs - 1) - new_col,
-                        //         Heading::N => (fs - 1) - new_col,
-                        //         _ => new_col
-                        //     };
-                        //     new_row = match player.heading {
-                        //         Heading::E => (fs - 1) - new_row,
-                        //         Heading::W => (fs - 1) - new_row,
-                        //         // _ => new_row
-                        //         _ => match cur_player_heading {
-                        //             Heading::S =>
-                        //         }
-                        //     };
-                        // }
+                        let (mut new_row, mut new_col) = get_new_position(fs, player.r, player.c, cur_player_heading, next_region.1);
                         let mult = region_pos.get(&next_region.0).unwrap();
-                        // println!("mult: {:?}, new_row: {}, new_col: {}", mult, new_row, new_col);
                         new_row = (fs * mult.0) + new_row;
                         new_col = (fs * mult.1) + new_col;
-                        // println!("new_row: {}, new_col: {}", new_row, new_col);
                         tile_pot = get_tile(&transposed_board, new_col, new_row).unwrap();
-                        println!("tile pot is {:?}", tile_pot);
                     } else {
-                        tile_pot = col.get(dest).unwrap_or(wrap_tile);
-                        // println!("move is on board, new tile is {:?}", tile_pot);
+                        tile_pot = get_tile(&transposed_board, player.c, dest).unwrap();
                     }
-
-                    if tile_pot.is_blocked() {
-                        // println!("player blocked at row: {:?}, staying at {:?}", dest, player.r);
-                        player.heading = cur_player_heading;
-                        break;
-                    } else {
-                        player.r = tile_pot.r;
-                        player.c = tile_pot.c;
-                        // println!("Setting player position: {:?}", player);
-                    }
-                    board.get_mut(player.r).unwrap().get_mut(player.c).unwrap().p = get_heading_char(&player.heading);
                 } else {
                     let move_amount = player.heading.move_amount();
-
                     let dest = (player.c as i32 + move_amount) as usize;
                     let start_end = row_start_end.get(&player.r).unwrap();
 
-                    let wrap_tile;
-                    if move_amount < 0 {
-                        wrap_tile = start_end.1
-                    } else {
-                        wrap_tile = start_end.0
-                    };
-
-                    let tile_pot: &Tile;
                     if dest < start_end.0.c || dest > start_end.1.c {
                         let cur_tile = get_tile(&board, player.r, player.c).unwrap();
-                        // println!("current tile: {:?}", cur_tile);
                         let next_region = region_map.get(&(cur_tile.face.unwrap(), &cur_player_heading)).unwrap();
-                        println!("WRAP: heading: {:?}, cur_tile: {:?}, next_region: {:?}", cur_player_heading, cur_tile, next_region);
-                        // let change_orientation = player.heading.toggle_orientation(next_region.1);
                         player.heading = next_region.1;
                         let (mut new_row, mut new_col) = get_new_position(fs, player.r, player.c, cur_player_heading, next_region.1);
-                        // let mut new_col: usize;
-                        // let mut new_row: usize;
-                        // if change_orientation {
-                        //     new_col = player.r % fs;
-                        //     new_row = player.c % fs;
-                        //     new_row = match player.heading {
-                        //         Heading::S => 0,
-                        //         Heading::N => fs - 1,
-                        //         _ => new_row
-                        //         // _ => match cur_player_heading {
-                        //         //     Heading::N => new_row,
-                        //         //     Heading::S => new_row,
-                        //         //     _ => (fs - 1) - new_row
-                        //         // }
-                        //     };
-                        //     new_col = match player.heading {
-                        //         Heading::E => 0,
-                        //         Heading::W => fs - 1,
-                        //         _ => new_col
-                        //         // _ => match cur_player_heading {
-                        //         //     Heading::N => (fs - 1) + new_col,
-                        //         //     Heading::S => (fs - 1) + new_col,
-                        //         //     _ => (fs - 1) - new_col
-                        //         // }
-                        //     };
-                        // } else {
-                        //     new_col = player.c % fs;
-                        //     new_row = player.r % fs;
-                        //     new_col = match player.heading {
-                        //         Heading::S => (fs - 1) - new_col,
-                        //         Heading::N => (fs - 1) - new_col,
-                        //         _ => new_col
-                        //     };
-                        //     new_row = match player.heading {
-                        //         Heading::E => (fs - 1) - new_row,
-                        //         Heading::W => (fs - 1) - new_row,
-                        //         _ => new_row
-                        //     };
-                        // }
+
                         let mult = region_pos.get(&next_region.0).unwrap();
-                        // println!("mult: {:?}, new_row: {}, new_col: {}", mult, new_row, new_col);
                         new_row = (fs * mult.0) + new_row;
                         new_col = (fs * mult.1) + new_col;
-                        // println!("new_row: {}, new_col: {}", new_row, new_col);
                         tile_pot = get_tile(&board, new_row, new_col).unwrap();
-                        println!("tile pot is {:?}", tile_pot);
                     } else {
-                        tile_pot = get_tile(&board, player.r, dest).unwrap_or(&wrap_tile);
-                        // println!("move is on board, new tile is {:?}", tile_pot);
+                        tile_pot = get_tile(&board, player.r, dest).unwrap();
                     }
-
-                    if tile_pot.is_blocked() {
-                        // println!("player blocked at col: {:?}, staying at {:?}", dest, player.c);
-                        player.heading = cur_player_heading;
-                        break;
-                    } else {
-                        player.r = tile_pot.r;
-                        player.c = tile_pot.c;
-                        // println!("Setting player position: {:?}", player);
-                    }
-                    board.get_mut(player.r).unwrap().get_mut(player.c).unwrap().p = get_heading_char(&player.heading);
                 }
+                if tile_pot.is_blocked() {
+                    player.heading = cur_player_heading;
+                    break;
+                } else {
+                    player.r = tile_pot.r;
+                    player.c = tile_pot.c;
+                }
+                board.get_mut(player.r).unwrap().get_mut(player.c).unwrap().p = get_heading_char(&player.heading);
             }
-            // display_board(&board, &player);
         } else {
             player.heading = update_heading(player.heading, c);
         }
     }
-    display_board(&board, &player);
-    println!("final player: {:?}", player);
+    // _display_board(&board, &player);
     println!("{}", 1000 * (player.r + 1) + 4 * (player.c + 1) + (player.heading as usize));
 }
 
 fn main() {
-    // part1();
+    part1();
     part2();
 }
