@@ -67,6 +67,10 @@ name = "crates"
 version = "0.1.0"
 
 [[package]]
+name = "cubes"
+version = "0.1.0"
+
+[[package]]
 name = "dirwalk"
 version = "0.1.0"
 
