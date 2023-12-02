@@ -1,54 +1,55 @@
 use std::fs;
 use std::collections::HashMap;
-// use std::cmp::Ordering;
-// use clap::Parser;
 
 fn main() {
-    println!("Hello, world!");
-
+    // what is this rust language.  lets relearn it.   again.   for the third time.  and do it poorly.
     let mut valid_game: HashMap<&str, i32> = HashMap::new();
     valid_game.insert("red", 12);
     valid_game.insert("green", 13);
     valid_game.insert("blue", 14);
 
-    let filename = "in_test";
-    let p1_sum = fs::read_to_string(filename)
-        .unwrap()
-        .lines()
-        .enumerate()
-        .map(|(i, x)| {
-            let draws = x.split(":")
-                .skip(1)
-                .take(1)
-                .collect::<Vec<&str>>()
-                .first()
-                .unwrap()
-                .split(";")
-                .collect::<Vec<&str>>();
+    let input = fs::read_to_string("in").unwrap();
+    let max_draws = input.lines()
+        .map(|x| {
+            let draws = x.split(":").skip(1).take(1).collect::<Vec<&str>>()
+                .first().unwrap().split(";").collect::<Vec<&str>>();
 
-            let valid_game = draws
+           let result = draws
                 .iter()
-                .map(|d| {
-                    let cubes = d.split(",")
-                        .map(|c| {
+                .fold(HashMap::new(), |mut acc: HashMap<&str, i32>, d| {
+                    d.split(",")
+                        .for_each(|c| {
                             let mut citer = c.split_whitespace();
-                            let var_name = (citer.next().unwrap().parse::<i32>().unwrap(), citer.next().unwrap());
-                            var_name
-                        })
-                        .collect::<Vec<_>>();
+                            let mut t = (citer.next().unwrap().parse::<i32>().unwrap(), citer.next().unwrap());
+                            let max = acc.entry(t.1).or_insert(t.0);
+                            if max < &mut t.0 {
+                                acc.insert(t.1, t.0);
+                            }
+                        });
+                    acc
+                });
 
-                    cubes.iter().all(|c| valid_game.get(c.1).unwrap() >= &c.0)
-                })
-                .all(|d| d);
-            (i, valid_game)
+            result
         })
-        .fold(0,|mut acc, (i, x)| {
-            if x {
-                acc += i;
-            }
+        .collect::<Vec<HashMap<&str, i32>>>();
+
+    let p1: usize = max_draws
+        .iter()
+        .enumerate()
+        .filter(|x| {
+            x.1.iter().all(|d| valid_game.get(d.0).unwrap() >= d.1)
+        })
+        .map(|x| x.0 + 1)
+        .sum();
+
+    let p2: i32 = max_draws 
+        .iter()
+        .map(|x| x.values().fold(1, |mut acc, v| {
+            acc = acc * v;
             acc
-        });
-
-    println!("{:?}", p1_sum);
-
+        }))
+        .sum();
+    
+    println!("p1: {:?}", p1);
+    println!("p2: {:?}", p2);
 }
