@@ -5,15 +5,10 @@ fn get_wins(time: i64, distance: i64) -> i64 {
     let mut max = time / 2;
     let mut rem = time - max;
     let diff = if max - rem == 0 { 1 } else { 0 };
-    if max * rem > distance {
-        wins += 1;
+    while max * rem > distance {
+        wins +=1;
         max -= 1;
         rem += 1;
-        while max * rem > distance {
-            wins +=1;
-            max -= 1;
-            rem += 1;
-        }
     }
     wins * 2 - diff
 }
