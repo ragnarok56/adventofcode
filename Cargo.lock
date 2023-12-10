@@ -180,6 +180,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "oasis"
+version = "0.1.0"
+
+[[package]]
 name = "once_cell"
 version = "1.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
