@@ -83,6 +83,10 @@ name = "day03-2023"
 version = "0.1.0"
 
 [[package]]
+name = "desert"
+version = "0.1.0"
+
+[[package]]
 name = "dirwalk"
 version = "0.1.0"
 
