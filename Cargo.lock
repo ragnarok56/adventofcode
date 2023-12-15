@@ -91,12 +91,6 @@ name = "dirwalk"
 version = "0.1.0"
 
 [[package]]
-name = "either"
-version = "1.9.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a26ae43d7bcc3b814de94796a5e736d4029efb0ee900c12e2d54c993ad1a1e07"
-
-[[package]]
 name = "errno"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -120,13 +114,6 @@ dependencies = [
 [[package]]
 name = "fuel"
 version = "0.1.0"
-
-[[package]]
-name = "galaxy"
-version = "0.1.0"
-dependencies = [
- "itertools",
-]
 
 [[package]]
 name = "heck"
@@ -166,15 +153,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "itertools"
-version = "0.12.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "25db6b064527c5d482d0423354fcd07a89a2dfe07b67892e62411946db7f07b0"
-dependencies = [
- "either",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.137"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -188,6 +166,10 @@ checksum = "8f9f08d8963a6c613f4b1a78f4f4a4dbfadf8e6545b2d72861731e4858b8b47f"
 
 [[package]]
 name = "lotto"
+version = "0.1.0"
+
+[[package]]
+name = "mirror"
 version = "0.1.0"
 
 [[package]]
@@ -296,13 +278,6 @@ dependencies = [
 [[package]]
 name = "sand"
 version = "0.1.0"
-
-[[package]]
-name = "springs"
-version = "0.1.0"
-dependencies = [
- "itertools",
-]
 
 [[package]]
 name = "strsim"
