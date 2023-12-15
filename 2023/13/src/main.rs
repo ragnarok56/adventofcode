@@ -1,31 +1,28 @@
-use std::collections::hash_map::DefaultHasher;
 use std::fs;
-use std::hash::{Hash, Hasher};
-
 
 #[derive(Debug)]
 struct Board {
-    rows: Vec<u64>,
-    cols: Vec<u64>
+    rows: Vec<String>,
+    cols: Vec<String>
 }
 
 impl Board {
     fn add_row(&mut self, row: String) {
-        self.rows.push(calculate_hash(&row));
+        self.rows.push(row);
     }
     fn add_col(&mut self, col: String) {
-        self.cols.push(calculate_hash(&col));
+        self.cols.push(col);
     }
 }
 
-fn get_reflected(v: &Vec<u64>) -> usize {
+fn get_reflected(v: &Vec<String>) -> usize {
     // unga bunga
-    let mut stack: Vec<u64> = Vec::new();
-    let mut popped_lines: Vec<u64> = Vec::new();
+    let mut stack: Vec<String> = Vec::new();
+    let mut popped_lines: Vec<String> = Vec::new();
     let mut reflection_idx = 0;
     for (i, r) in v.iter().enumerate() {
         if stack.len() == 0 {
-            stack.push(*r);
+            stack.push(r.to_string());
         } else {
             let last = stack.last();
             if last.is_some() {
@@ -38,20 +35,20 @@ fn get_reflected(v: &Vec<u64>) -> usize {
                     // track 
                     popped_lines.push(stack.pop().unwrap());
                     // copy to front to keep ordering ugh
-                    popped_lines.insert(0, *r);
+                    popped_lines.insert(0, r.to_string());
                     // nothing left on stack, we're at end
                     if stack.len() == 0 {
                         break;
                     }
                 } else if reflection_idx == 0 {
                     // no reflection found yet, increment stack
-                    stack.push(*r);
+                    stack.push(r.to_string());
                 } else if stack.len() > 0 {
                     // maybe ran into a match before the end, add back popped lines
                     for p in popped_lines.iter() {
-                        stack.push(*p);
+                        stack.push(p.to_string());
                     }
-                    stack.push(*r);
+                    stack.push(r.to_string());
                     popped_lines.clear();
                     reflection_idx = 0;
                 } else {
@@ -65,12 +62,6 @@ fn get_reflected(v: &Vec<u64>) -> usize {
     }
     // println!("{}", reflection_idx);
     reflection_idx
-}
-
-fn calculate_hash<T: Hash>(t: &T) -> u64 {
-    let mut s = DefaultHasher::new();
-    t.hash(&mut s);
-    s.finish()
 }
 
 fn main() {
@@ -107,11 +98,12 @@ fn main() {
 
     let p1: usize = boards.iter().enumerate()
         .map(|(i, x)| {
+            println!("==================================================");
             let score = (100 * get_reflected(&x.rows)) + get_reflected(&x.cols);
-            if score == 0 {
+            // if score == 0 {
                 println!("[{:?}] {:?}", i, x);
                 println!("score: {}", score);
-            }
+            // }
             score
         })
         .sum();
