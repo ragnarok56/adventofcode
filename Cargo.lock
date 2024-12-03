@@ -370,6 +370,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "reports"
+version = "0.1.0"
+
+[[package]]
 name = "rockpaperscissors"
 version = "0.1.0"
 
