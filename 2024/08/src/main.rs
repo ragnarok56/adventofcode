@@ -66,6 +66,21 @@ fn get_next_pos(cur: Pos, x: i32, y: i32) -> Option<Pos> {
     Some(Pos{x: x.unwrap(), y: y.unwrap()})
 }
 
+fn print_board(board: &Vec<Vec<char>>, antinodes: HashMap<&Pos, &char>) {
+
+    for (i, r) in board.iter().enumerate() {
+        for (j, c) in r.iter().enumerate() {
+            let antinode: Option<&&char> = antinodes.get(&Pos{x: j, y: i});
+            if antinode.is_some() {
+                print!("{}", antinode.unwrap());
+            } else {
+                print!("{}", c);
+            }
+        }
+        println!();
+    }
+}
+
 fn main() {
     let (antennas, board) = load_input("in_test");
 
@@ -79,13 +94,6 @@ fn main() {
 
     println!("{:?}", signals);
     println!("{:?}", antennas);
-
-    // for r in board {
-    //     for c in r {
-    //         print!("{}", c);
-    //     }
-    //     println!();
-    // }
 
     let mut signal_tracker: HashMap<Pos, HashMap<char, Vec<AntennaRelation>>> = HashMap::new();
     let moves: Vec<(i32, i32)> = vec![
@@ -104,13 +112,12 @@ fn main() {
         for m in moves.iter() {
             let mut signal_dir_pos = get_next_pos(antenna.pos, m.1, m.0);
             while signal_dir_pos.is_some() && signal_dir_pos.unwrap().is_on_board(w, h) {
-                // println!("{:?}", signal_dir_pos);
+                println!("{:?}", signal_dir_pos);
                 let signal_pos = signal_dir_pos.unwrap();
 
                 let distances = vec![antenna.pos.x.abs_diff(signal_pos.x), antenna.pos.y.abs_diff(signal_pos.y)];
                 let distance = distances.iter().max().unwrap();
-                println!("{:?}:{:?}:{:?}", antenna.pos, signal_pos, distance);
-
+                println!("A {:?}, S {:?}, D {:?}", antenna.pos, signal_pos, distance);
 
                 signal_tracker
                     .entry(signal_pos)
@@ -119,22 +126,32 @@ fn main() {
                         .or_insert(Vec::new())
                         .push(AntennaRelation{antenna: antenna, distance: *distance});
 
-                // signal_tracker.entry(signal_pos).or_insert(HashMap::new()).and_modify(|e| {
-                //     e.entry(antenna.signal).and_modify(|s| {
-                //         s.push(AntennaRelation{antenna: antenna, distance: *distance});
-                //     });
-                // });
-
                 signal_dir_pos = get_next_pos(signal_dir_pos.unwrap(), m.1, m.0);
             }
         }
-        println!("{:?}", signal_tracker);
-        for (pos, s) in signal_tracker.iter() {
-            for ar in s.iter() {
-                if ar.1.len() > 1 {
-                    println!("{:?} {:?} {:?}", pos, ar.0, ar.1.len());
-                }
-            }
+    }
+
+    let mut sum = 0;
+    let mut antinode_positions = HashMap::new();
+    for (pos, s) in signal_tracker.iter() {
+        let is_antinode_pos = s
+            .iter()
+            .filter(|x| x.1.len() > 1)
+            .filter(|(signal, ars)| {
+                ars
+                    .iter()
+                    .any(|ar| {
+                        ars
+                            .iter()
+                            .find(|other_ar| ar.distance * 2 == other_ar.distance).is_some()
+                })
+            }).next();
+        if is_antinode_pos.is_some() {
+            println!("{:?}, {:?}", pos, is_antinode_pos);
+            antinode_positions.insert(pos, is_antinode_pos.unwrap().0);
+            sum += 1;
         }
     }
+    print_board(&board, antinode_positions);
+    println!("{:?}", sum);
 }
