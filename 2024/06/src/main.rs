@@ -12,73 +12,60 @@ struct Pos {
     y: usize
 }
 
-impl Pos {
-    fn is_valid(&self, board: &Vec<Vec<char>>) -> bool {
-        self.x < 0 || self.y < 0 || self.x + 1 > board.len() || self.y + 1 > board.first().unwrap().len()
-    }
-}
-
 #[derive(PartialEq, Eq, Hash, Clone, Debug)]
 struct Guard {
     pos: Pos,
     d: D
 }
 
-fn get_board_cell(board: &Vec<Vec<char>>, x: usize, y: usize) -> &char {
-    board.get(y).unwrap().get(x).unwrap()
-}
-
 impl Guard {
-    fn try_move_guard(&mut self, board: &Vec<Vec<char>>, w: usize, h: usize)-> bool {
+    fn next_pos(&self, w: usize, h: usize) -> Option<Pos> {
         match self.d {
-            D::E => {
-                if self.pos.x == w - 1 {
-                    false
-                } else {
-                    if *get_board_cell(board, self.pos.x + 1, self.pos.y) == '#' {
+            D::E => if self.pos.x == w - 1 { None } else { Some(Pos{x: self.pos.x + 1, y: self.pos.y}) }
+            D::W => if self.pos.x == 0 { None } else { Some(Pos{x: self.pos.x - 1, y: self.pos.y}) }
+            D::N => if self.pos.y == 0 { None } else { Some(Pos{x: self.pos.x, y: self.pos.y - 1}) }
+            D::S => if self.pos.y == h - 1 { None } else { Some(Pos{x: self.pos.x, y: self.pos.y + 1}) }
+        }
+    }
+
+    fn try_move(&mut self, board: &Vec<Vec<char>>, w: usize, h: usize)-> bool {
+        let maybe_next_pos = self.next_pos(w, h);
+        // println!("{:?}", maybe_next_pos);
+        if maybe_next_pos.is_none() {
+            return false
+        } else {
+            let next_pos = maybe_next_pos.unwrap();
+            match self.d {
+                D::E => {
+                    if board[next_pos.y][next_pos.x] == '#' {
                         self.d = D::S;
                     } else {
-                        self.pos.x += 1;
+                        self.pos = next_pos;
                     }
-                    true
-                }
-            },
-            D::W => {
-                if self.pos.x == 0 {
-                    false
-                } else {
-                    if *get_board_cell(board, self.pos.x - 1, self.pos.y) == '#' {
+                },
+                D::W => {
+                    if board[next_pos.y][next_pos.x] == '#' {
                         self.d = D::N;
                     } else {
-                        self.pos.x -= 1;
+                        self.pos = next_pos;
                     }
-                    true
-                }
-            },
-            D::N => {
-                if self.pos.y == 0 {
-                    false
-                } else {
-                    if *get_board_cell(board, self.pos.x, self.pos.y - 1) == '#' {
+                },
+                D::N => {
+                    if board[next_pos.y][next_pos.x] == '#' {
                         self.d = D::E;
                     } else {
-                        self.pos.y -= 1;
+                        self.pos = next_pos;
                     }
-                    true
-                }
-            },
-            D::S => {
-                if self.pos.y == h - 1 {
-                    false
-                } else {
-                    if *get_board_cell(board, self.pos.x, self.pos.y + 1) == '#' {
+                },
+                D::S => {
+                    if board[next_pos.y][next_pos.x] == '#' {
                         self.d = D::W;
                     } else {
-                        self.pos.y += 1;
+                        self.pos = next_pos;
                     }
-                    true
                 }
             }
+            true
         }
     }
 }
@@ -113,49 +100,63 @@ fn load_input(path: &str) -> (Guard, Vec<Vec<char>>) {
     (guard.unwrap(), board)
 }
 
-fn print_board(board: &Vec<Vec<char>>) {
-    for r in board.iter() {
-        for c in r.iter() {
-            print!("{}", c);
-        }
-        println!();
+fn traverse(board: &Vec<Vec<char>>, mut guard: Guard, w: usize, h: usize) -> HashSet<Pos> {
+    let mut visited: HashSet<Pos> = HashSet::new();
+    visited.insert(guard.pos);
+
+    while guard.try_move(&board, w, h) {
+        visited.insert(guard.pos);
     }
+
+    visited
+}
+
+fn is_loop(board: &Vec<Vec<char>>, mut guard: Guard, w: usize, h: usize) -> bool {
+    let mut visited_and_dir: HashSet<(Pos, D)> = HashSet::new();
+    visited_and_dir.insert((guard.pos, guard.d));
+
+    while guard.try_move(&board, w, h) {
+        if visited_and_dir.contains(&(Pos{x: guard.pos.x, y: guard.pos.y}, guard.d)) {
+            return true
+        }
+        visited_and_dir.insert((guard.pos, guard.d));
+    }
+
+    false
+}
+
+
+fn traverse_loop(visited: HashSet<Pos>, mut board: Vec<Vec<char>>, guard: Guard, w: usize, h: usize) -> i32 {
+    let mut loop_count = 0;
+    let start_pos = guard.pos.clone();
+    for pos in visited.iter() {
+        if *pos == start_pos {
+            // skip starting spot
+            continue
+        }
+
+        // pretend there is an obstacle on the board and run through to see if the guard loops
+        board[pos.y][pos.x] = '#';
+
+        if is_loop(&board, guard.clone(), w, h) {
+            loop_count += 1;
+        }
+
+        board[pos.y][pos.x] = '.';
+    }
+
+    loop_count
 }
 
 fn main() {
-    let (mut guard, board) = load_input("in_test");
-    let mut visited: HashSet<Pos> = HashSet::new();
-    let mut visited_and_dir: HashSet<(Pos, D)> = HashSet::new();
-    visited.insert(guard.pos);
-    visited_and_dir.insert((guard.pos, guard.d));
-    print_board(&board);
-    println!("{:?}", guard);
+    let (guard, board) = load_input("in");
 
+    let h = board.len();
+    let w = board.first().unwrap().len();
 
-    let w = board.len();
-    let h = board.first().unwrap().len();
-    let mut loop_options = 0;
-    while guard.try_move_guard(&board, w, h) {
-        // println!("{:?}", guard);
-        visited.insert(guard.pos);
-        visited_and_dir.insert((guard.pos, guard.d));
-
-        // this only checks if guard passes by an previously passed spot
-        // but needs to account for guard passing by a _line_ of previously passed spots
-        // that they could turn and walk into, thus causing a loop.  need to track what those
-        // spots are and how to look them up based on guards current position and direction.
-        let found = match guard.d {
-            D::W => visited_and_dir.contains(&(Pos{x: guard.pos.x, y: guard.pos.y - 1}, D::N)),
-            D::E => visited_and_dir.contains(&(Pos{x: guard.pos.x, y: guard.pos.y + 1}, D::S)),
-            D::S => visited_and_dir.contains(&(Pos{x: guard.pos.x - 1, y: guard.pos.y}, D::W)),
-            D::N => visited_and_dir.contains(&(Pos{x: guard.pos.x + 1, y: guard.pos.y}, D::E))
-        };
-        if found {
-            loop_options += 1;
-        }
-
-    }
-
+    let visited = traverse(&board, guard.clone(), w, h);
     println!("{:?}", visited.len());
-    println!("{:?}", loop_options);
+
+    let p2 = traverse_loop(visited, board.clone(), guard.clone(), w, h);
+    println!("{:?}", p2);
 }
