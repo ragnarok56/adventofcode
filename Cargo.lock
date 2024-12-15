@@ -16,6 +16,10 @@ name = "almanac"
 version = "0.1.0"
 
 [[package]]
+name = "antinode"
+version = "0.1.0"
+
+[[package]]
 name = "asciihash"
 version = "0.1.0"
 
